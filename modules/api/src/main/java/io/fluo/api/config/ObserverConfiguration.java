@@ -27,13 +27,25 @@ import io.fluo.api.observer.Observer;
 public class ObserverConfiguration {
   private final String className;
   private Map<String,String> params = Collections.emptyMap();
+  
+  public static enum Language { JAVA, JYTHON }
+  private Language language;
 
-  public ObserverConfiguration(String className) {
+  public ObserverConfiguration(Language language, String className) {
+    this.language = language;
     this.className = className;
+  }
+  
+  public ObserverConfiguration(String className) {
+    this(Language.JAVA, className);
   }
 
   public String getClassName() {
     return className;
+  }
+  
+  public Language getLanguage() {
+    return language;
   }
 
   /**

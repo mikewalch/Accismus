@@ -20,7 +20,6 @@ import io.fluo.api.config.ObserverConfiguration;
 import io.fluo.api.data.Bytes;
 import io.fluo.api.data.Column;
 import io.fluo.api.observer.AbstractObserver;
-import io.fluo.core.impl.Environment;
 import org.python.util.PythonInterpreter;
 
 /**
@@ -29,10 +28,9 @@ import org.python.util.PythonInterpreter;
 public class JythonObserver extends AbstractObserver {
   
   private PythonInterpreter interp = new PythonInterpreter();
-  private Environment env;
   
-  public JythonObserver(Environment env, ObserverConfiguration config) {
-    this.env = env;
+  public JythonObserver(ObserverConfiguration config) {
+  
   }
   
   @Override

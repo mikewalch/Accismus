@@ -33,6 +33,7 @@ import io.fluo.api.observer.Observer.NotificationType;
 import io.fluo.api.observer.Observer.ObservedColumn;
 import io.fluo.core.util.AccumuloUtil;
 import io.fluo.core.util.CuratorUtil;
+import io.fluo.core.worker.JythonObserver;
 import io.fluo.core.worker.ObserverContext;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.conf.Property;
@@ -170,7 +171,12 @@ public class FluoAdminImpl implements FluoAdmin {
     }
     observerConfig.setParameters(params);
 
-    Observer observer = Class.forName(observerConfig.getClassName()).asSubclass(Observer.class).newInstance();
+    Observer observer;
+    if (language.equals(Language.JAVA)) {
+      observer = Class.forName(observerConfig.getClassName()).asSubclass(Observer.class).newInstance();
+    } else {
+      observer = new JythonObserver(observerConfig);
+    }
     
     logger.info("Setting up observer {} using params {}.",observer.getClass().getSimpleName(),  params);
     

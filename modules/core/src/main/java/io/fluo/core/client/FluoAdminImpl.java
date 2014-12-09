@@ -26,6 +26,7 @@ import io.fluo.accumulo.util.ZookeeperUtil;
 import io.fluo.api.client.FluoAdmin;
 import io.fluo.api.config.FluoConfiguration;
 import io.fluo.api.config.ObserverConfiguration;
+import io.fluo.api.config.ObserverConfiguration.Language;
 import io.fluo.api.data.Column;
 import io.fluo.api.observer.Observer;
 import io.fluo.api.observer.Observer.NotificationType;
@@ -154,8 +155,13 @@ public class FluoAdminImpl implements FluoAdmin {
       Map<Column,ObserverConfiguration> weakObservers, String value) throws Exception {
     
     String[] fields = value.split(",");
-
-    ObserverConfiguration observerConfig = new ObserverConfiguration(fields[0]);
+    
+    String[] obsFields = fields[0].split(":");
+    if (obsFields.length != 2) {
+      throw new IllegalArgumentException("Bad observer config.  Expected language:className");
+    }
+    Language language = ObserverConfiguration.parseLanguage(obsFields[0]);
+    ObserverConfiguration observerConfig = new ObserverConfiguration(language, obsFields[1]);
 
     Map<String,String> params = new HashMap<>();
     for (int i = 1; i < fields.length; i++) {

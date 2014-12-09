@@ -66,5 +66,15 @@ public class ObserverConfiguration {
   public Map<String,String> getParameters() {
     return params;
   }
-
+  
+  public static Language parseLanguage(String input) {
+    switch(input.toLowerCase()) {
+      case "java":
+        return Language.JAVA;
+      case "jython": 
+        return Language.JYTHON;
+      default:
+        throw new IllegalArgumentException("Unknown observer language: "+input);
+    }
+  }
 }

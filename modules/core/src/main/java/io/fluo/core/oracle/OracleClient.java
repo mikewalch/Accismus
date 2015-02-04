@@ -17,16 +17,18 @@ package io.fluo.core.oracle;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.fluo.accumulo.util.ZookeeperPath;
 import io.fluo.api.exceptions.FluoException;
 import io.fluo.core.impl.CuratorCnxnListener;
@@ -270,8 +272,10 @@ public class OracleClient {
     }
   }
 
-  private final static Map<String,OracleClient> clients = new HashMap<>();
-
+  private final static Cache<String, OracleClient> clients = CacheBuilder.newBuilder()
+                                                                  .maximumSize(100)
+                                                                  .expireAfterAccess(7, TimeUnit.DAYS)
+                                                                  .build();
   private final Environment env;
   private final ArrayBlockingQueue<TimeRequest> queue = new ArrayBlockingQueue<>(1000);
 
@@ -322,27 +326,19 @@ public class OracleClient {
   }
 
   /**
-   * Create an instance of an OracleClient and cache it by the Fluo instance id`
-   *
-   * @param env
-   * @return
+   * Return an instance of an OracleClient given an environment
    */
-  public static synchronized OracleClient getInstance(Environment env) {
-    // this key differentiates between different instances of Accumulo and Fluo
-    String key = env.getFluoInstanceID();
-
-    OracleClient client = clients.get(key);
-
-    if (client == null) {
-      try {
-        client = new OracleClient(env);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-      clients.put(key, client);
+  public static OracleClient getInstance(final Environment env) {
+    try {
+      return clients.get(env.getFluoInstanceID(), new Callable<OracleClient>() {
+        @Override
+        public OracleClient call() throws Exception {
+          return new OracleClient(env);
+        }
+      });
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
     }
-
-    return client;
   }
-
+  
 }

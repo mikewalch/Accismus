@@ -668,7 +668,7 @@ public class TransactionImpl implements Transaction, Snapshot {
         throw new CommitException("Pre-commit failed");
       }
       
-      long commitTs = OracleClient.getInstance(env).getTimestamp();
+      long commitTs = env.getSharedResources().getOracleClient().getTimestamp();
       if (commitPrimaryColumn(cd, commitTs)) {
         finishCommit(cd, commitTs);
       } else {
@@ -693,7 +693,7 @@ public class TransactionImpl implements Transaction, Snapshot {
 
   void deleteWeakRow() {
     if (weakRow != null) {
-      long commitTs = OracleClient.getInstance(env).getTimestamp();
+      long commitTs = env.getSharedResources().getOracleClient().getTimestamp();
       Flutation m = new Flutation(env, weakRow);
       m.putDelete(ColumnConstants.NOTIFY_CF.toArray(), ColumnUtil.concatCFCQ(weakColumn), gv(weakColumn), commitTs);
 

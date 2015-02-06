@@ -18,17 +18,13 @@ package io.fluo.core.oracle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.fluo.accumulo.util.ZookeeperPath;
 import io.fluo.api.exceptions.FluoException;
 import io.fluo.core.impl.CuratorCnxnListener;
@@ -272,14 +268,10 @@ public class OracleClient {
     }
   }
 
-  private final static Cache<String, OracleClient> clients = CacheBuilder.newBuilder()
-                                                                  .maximumSize(100)
-                                                                  .expireAfterAccess(7, TimeUnit.DAYS)
-                                                                  .build();
   private final Environment env;
   private final ArrayBlockingQueue<TimeRequest> queue = new ArrayBlockingQueue<>(1000);
 
-  private OracleClient(Environment env) throws Exception {
+  public OracleClient(Environment env) {
     this.env = env;
 
     responseTimer = env.getSharedResources().getMetricRegistry().timer(env.getMeticNames().getOracleClientGetStamps());
@@ -323,22 +315,6 @@ public class OracleClient {
    */
   public synchronized String getOracle() {
     return currentLeader != null ? currentLeader.getId() : null;
-  }
-
-  /**
-   * Return an instance of an OracleClient given an environment
-   */
-  public static OracleClient getInstance(final Environment env) {
-    try {
-      return clients.get(env.getFluoInstanceID(), new Callable<OracleClient>() {
-        @Override
-        public OracleClient call() throws Exception {
-          return new OracleClient(env);
-        }
-      });
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
-    }
   }
   
 }

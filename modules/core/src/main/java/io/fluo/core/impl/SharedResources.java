@@ -38,7 +38,7 @@ public class SharedResources implements AutoCloseable {
   private final ConditionalWriter cw;
   private final SharedBatchWriter sbw;
   private final CuratorFramework curator;
-  private final OracleClient oracleClient;
+  private OracleClient oracleClient = null;
   private TransactorID tid = null;
   private TransactorNode tnode = null;
   private TransactorCache transactorCache = null;
@@ -59,7 +59,6 @@ public class SharedResources implements AutoCloseable {
     txInfoCache = new TxInfoCache(env);
     visCache = new VisibilityCache();
     metricRegistry = new MetricRegistry();
-    oracleClient = new OracleClient(env);
   }
   
   public SharedBatchWriter getBatchWriter() {
@@ -82,8 +81,11 @@ public class SharedResources implements AutoCloseable {
     return curator;
   }
   
-  public OracleClient getOracleClient() {
+  public synchronized OracleClient getOracleClient() {
     checkIfClosed();
+    if (oracleClient == null) {
+      oracleClient = new OracleClient(env);
+    }
     return oracleClient;
   }
   

@@ -62,14 +62,17 @@ public class FluoList {
           + children.size() + " application(s)\n");
       System.out.println("Application     Status");
       System.out.println("-----------     ------");
+
       for (String path : children) {
         FluoConfiguration appConfig = new FluoConfiguration(config);
         appConfig.setApplicationName(path);
-        String state = "STOPPED";
-        if (FluoAdminImpl.oracleExists(appConfig)) {
-          state = "RUNNING";
+        try (CuratorFramework appCurator = CuratorUtil.newAppCurator(appConfig)) {
+          String state = "STOPPED";
+          if (FluoAdminImpl.oracleExists(appCurator)) {
+            state = "RUNNING";
+          }
+          System.out.format("%-15s %-11s\n", path, state);
         }
-        System.out.format("%-15s %-11s\n", path, state);
       }
     }
   }

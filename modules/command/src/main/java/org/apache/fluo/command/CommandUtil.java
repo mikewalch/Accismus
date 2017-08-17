@@ -15,8 +15,10 @@
 
 package org.apache.fluo.command;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.fluo.api.config.FluoConfiguration;
 import org.apache.fluo.core.client.FluoAdminImpl;
+import org.apache.fluo.core.util.CuratorUtil;
 
 public class CommandUtil {
 
@@ -30,10 +32,12 @@ public class CommandUtil {
 
   public static void verifyAppRunning(FluoConfiguration config) {
     verifyAppInitialized(config);
-    if (!FluoAdminImpl.oracleExists(config)) {
-      System.out.println("A Fluo '" + config.getApplicationName() + "' application is initialized "
-          + "but is not running!");
-      System.exit(-1);
+    try (CuratorFramework curator = CuratorUtil.newAppCurator(config)) {
+      if (!FluoAdminImpl.oracleExists(curator)) {
+        System.out.println(
+            "A Fluo '" + config.getApplicationName() + "' application is initialized " + "but is not running!");
+        System.exit(-1);
+      }
     }
   }
 }
